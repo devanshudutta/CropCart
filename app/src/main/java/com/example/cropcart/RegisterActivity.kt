@@ -1,10 +1,13 @@
 package com.example.cropcart
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -18,6 +21,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var mAuth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,12 +35,18 @@ class RegisterActivity : AppCompatActivity() {
         val passwordField: EditText = findViewById(R.id.etPassword)
         val usernameField: EditText = findViewById(R.id.username)
         val registerBtn: Button = findViewById(R.id.btnRegister)
+        progressBar = findViewById(R.id.progressBar2)
+
 
         registerBtn.setOnClickListener {
 
             val email = emailField.text.toString().trim()
             val password = passwordField.text.toString().trim()
             val username = usernameField.text.toString().trim()
+
+            progressBar.visibility = ProgressBar.VISIBLE
+
+            hideKeyboard()
 
             if (email.isEmpty() || password.isEmpty() || username.isEmpty()) {
                 Toast.makeText(this, "Fill all fields", Toast.LENGTH_SHORT).show()
@@ -53,14 +63,11 @@ class RegisterActivity : AppCompatActivity() {
                         )
 
 
-                        Toast.makeText(this, "Account created!", Toast.LENGTH_SHORT).show()
-
-                        val intent = Intent(this, LoginActivity::class.java)
-                        startActivity(intent)
-                        finish()
 
                         db.collection("users").document(userId).set(user)
                             .addOnSuccessListener {
+                                Toast.makeText(this, "Account created!", Toast.LENGTH_SHORT).show()
+                                finish()
                                 Log.d("RegisterActivity", "Username saved successfully")
                             }
                             .addOnFailureListener {
@@ -69,6 +76,7 @@ class RegisterActivity : AppCompatActivity() {
                             }
 
                     } else {
+                        progressBar.visibility = ProgressBar.INVISIBLE
                         Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                     }
                 }
@@ -89,4 +97,16 @@ class RegisterActivity : AppCompatActivity() {
             insets
         }
     }
+
+    private fun hideKeyboard() {
+        // Get the currently focused view
+        val view = currentFocus
+        if (view != null) {
+            // Get the InputMethodManager system service
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            // Hide the keyboard
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
 }
